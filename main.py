@@ -1,62 +1,45 @@
-from fastapi import FastAPI, Query, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+import time, uuid
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-import time
-import uuid
+
+ALLOWED_ORIGIN = "https://dash-jozfvh.example.com"
+EMAIL = "23f2002578@ds.studyu.iitm.ac.in"
 
 app = FastAPI()
 
-ALLOWED_ORIGIN = "https://dash-jozfvh.example.com"
+class CORSAndTimingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        origin = request.headers.get("origin")
+        start = time.time()
 
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[ALLOWED_ORIGIN],
-    allow_credentials=False,
-    allow_methods=["GET"],
-    allow_headers=["*"],
-)
-
-# Custom middleware
-class RequestMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request, call_next):
-        start = time.perf_counter()
+        if request.method == "OPTIONS":
+            resp = JSONResponse({})
+            if origin == ALLOWED_ORIGIN:
+                resp.headers["Access-Control-Allow-Origin"] = ALLOWED_ORIGIN
+                resp.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+                resp.headers["Access-Control-Allow-Headers"] = "*"
+            resp.headers["X-Request-ID"] = str(uuid.uuid4())
+            resp.headers["X-Process-Time"] = f"{time.time()-start:.6f}"
+            return resp
 
         response = await call_next(request)
-
-        process_time = time.perf_counter() - start
-
+        if origin == ALLOWED_ORIGIN:
+            response.headers["Access-Control-Allow-Origin"] = ALLOWED_ORIGIN
         response.headers["X-Request-ID"] = str(uuid.uuid4())
-        response.headers["X-Process-Time"] = f"{process_time:.6f}"
-
+        response.headers["X-Process-Time"] = f"{time.time()-start:.6f}"
         return response
 
-app.add_middleware(RequestMiddleware)
-
-
-EMAIL = "23f2002578@ds.study.iitm.ac.in"
+app.add_middleware(CORSAndTimingMiddleware)
 
 @app.get("/stats")
-def get_stats(values: str = Query(..., description="Comma-separated integers")):
-    try:
-        numbers = [int(x.strip()) for x in values.split(",") if x.strip()]
-    except ValueError:
-        raise HTTPException(
-            status_code=400,
-            detail="All values must be integers."
-        )
-
-    if not numbers:
-        raise HTTPException(
-            status_code=400,
-            detail="At least one integer must be provided."
-        )
-
+def stats(values: str):
+    nums = [int(x) for x in values.split(",") if x.strip() != ""]
     return {
         "email": EMAIL,
-        "count": len(numbers),
-        "sum": sum(numbers),
-        "min": min(numbers),
-        "max": max(numbers),
-        "mean": sum(numbers) / len(numbers)
-    }   
+        "count": len(nums),
+        "sum": sum(nums),
+        "min": min(nums),
+        "max": max(nums),
+        "mean": sum(nums) / len(nums)
+    }

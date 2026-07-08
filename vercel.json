@@ -1,3 +1,11 @@
+// vercel.json
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }]
+  "builds": [
+    { "src": "api/index.py", "use": "@vercel/python" },
+    { "src": "api/config.py", "use": "@vercel/python" }
+  ],
+  "routes": [
+    { "src": "/effective-config", "dest": "api/config.py" },
+    { "src": "/(.*)", "dest": "api/index.py" }
+  ]
 }

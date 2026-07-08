@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 import time
@@ -6,14 +6,14 @@ import uuid
 
 app = FastAPI()
 
-ALLOWED_ORIGIN = "https://your-allowed-origin.com"
+ALLOWED_ORIGIN = "https://dash-jozfvh.example.com"
 
 # CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[ALLOWED_ORIGIN],
     allow_credentials=False,
-    allow_methods=["GET"],
+    allow_methods=["GET", "OPTIONS"],
     allow_headers=["*"],
 )
 

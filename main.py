@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 ALLOWED_ORIGIN = "https://dash-jozfvh.example.com"
-EMAIL = "23f2002578@ds.studyu.iitm.ac.in"
+EMAIL = "23f2002578@ds.study.iitm.ac.in"
 
 app = FastAPI()
 
